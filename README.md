@@ -1,2 +1,2 @@
 # go-dremio-api-client
-GoLang Client for interacting with Dremio Api
+Golang Client for interacting with Dremio Api
