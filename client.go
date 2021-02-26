@@ -22,12 +22,14 @@ type Client struct {
 }
 
 type Config struct {
-	ApiKey string
-	Client *http.Client
+	ApiKey   string
+	Username string
+	Password string
+	Client   *http.Client
 }
 
 // New creates a new Dremio client.
-func New(baseUrl string, cfg Config) (*Client, error) {
+func NewClient(baseUrl string, cfg Config) (*Client, error) {
 	u, err := url.Parse(baseUrl)
 
 	if err != nil {
@@ -47,6 +49,14 @@ func New(baseUrl string, cfg Config) (*Client, error) {
 }
 
 func (c *Client) request(method, requestPath string, query url.Values, body io.Reader, responseStruct interface{}) error {
+	if c.config.ApiKey == "" {
+		apikey, err := c.getApiKey(c.config.Username, c.config.Password)
+		if err != nil {
+			return err
+		}
+		c.config.ApiKey = apikey
+	}
+
 	r, err := c.newRequest(method, requestPath, query, body)
 	if err != nil {
 		return err
@@ -106,4 +116,51 @@ func (c *Client) newRequest(method, requestPath string, query url.Values, body i
 
 	req.Header.Add("Content-Type", "application/json")
 	return req, err
+}
+
+type authResponse struct {
+	Token   string `json:"token"`
+	Expires int    `json:"expires"`
+}
+
+func (c *Client) getApiKey(username string, password string) (string, error) {
+	url := c.baseUrl
+	url.Path = path.Join(url.Path, "/apiv2/login")
+
+	bodyObj, err := json.Marshal(map[string]string{
+		"userName": username,
+		"password": password,
+	})
+	if err != nil {
+		return "", err
+	}
+	body := bytes.NewBuffer(bodyObj)
+	req, err := http.NewRequest("POST", url.String(), body)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return "", nil
+	}
+	defer resp.Body.Close()
+
+	bodyContents, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", nil
+	}
+
+	if resp.StatusCode >= 400 {
+		return "", fmt.Errorf("status: %d, body: %v", resp.StatusCode, string(bodyContents))
+	}
+	responseStruct := new(authResponse)
+
+	err = json.Unmarshal(bodyContents, &responseStruct)
+	if err != nil {
+		return "", err
+	}
+
+	return responseStruct.Token, nil
 }
