@@ -1,7 +1,10 @@
 package dapi
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
+	"fmt"
 )
 
 type DatasetField struct {
@@ -129,5 +132,51 @@ func (c *Client) UpdateVirtualDataset(id string, spec *UpdateVirtualDatasetSpec)
 		SqlContext: spec.SqlContext,
 	}
 	result := new(VirtualDataset)
+	return result, c.updateCatalogItem(id, dataset, result)
+}
+
+type NewPhysicalDatasetSpec struct {
+	Path   []string
+	Format PhysicalDatasetFormat
+}
+
+func (c *Client) NewPhysicalDataset(fileId string, spec *NewPhysicalDatasetSpec) (*PhysicalDataset, error) {
+	dataset := PhysicalDataset{
+		Dataset: Dataset{
+			CatalogEntity: CatalogEntity{
+				EntityType: "dataset",
+			},
+			Path: spec.Path,
+			Type: "PHYSICAL_DATASET",
+		},
+		Format: spec.Format,
+	}
+	body, err := json.Marshal(dataset)
+	if err != nil {
+		return nil, err
+	}
+	result := new(PhysicalDataset)
+	path := fmt.Sprintf("/api/v3/catalog/%s", fileId)
+	err = c.request("POST", path, nil, bytes.NewBuffer(body), result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+type UpdatePhysicalDatasetSpec struct {
+	Format PhysicalDatasetFormat
+}
+
+func (c *Client) UpdatePhysicalDataset(id string, spec *UpdatePhysicalDatasetSpec) (*PhysicalDataset, error) {
+	original, err := c.GetPhysicalDataset(id)
+	if err != nil {
+		return nil, err
+	}
+	dataset := PhysicalDataset{
+		Dataset: original.Dataset,
+		Format:  spec.Format,
+	}
+	result := new(PhysicalDataset)
 	return result, c.updateCatalogItem(id, dataset, result)
 }
