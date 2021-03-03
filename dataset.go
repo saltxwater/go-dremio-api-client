@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 )
 
 type DatasetField struct {
@@ -21,7 +22,6 @@ type DatasetFieldType struct {
 
 type Dataset struct {
 	CatalogEntity
-	Path   []string       `json:"path,omitempty"`
 	Type   string         `json:"type,omitempty"`
 	Fields []DatasetField `json:"fields,omitempty"`
 }
@@ -61,6 +61,7 @@ func (c *Client) GetDataset(id string) (*Dataset, error) {
 	if result.EntityType != "dataset" {
 		return nil, errors.New("Catalog entity is not a dataset")
 	}
+	result.EnrichFields()
 	return result, nil
 }
 
@@ -76,6 +77,7 @@ func (c *Client) GetVirtualDataset(id string) (*VirtualDataset, error) {
 	if result.Type != "VIRTUAL_DATASET" {
 		return nil, errors.New("Dataset is not a VIRTUAL_DATASET")
 	}
+	result.EnrichFields()
 	return result, nil
 }
 
@@ -91,6 +93,7 @@ func (c *Client) GetPhysicalDataset(id string) (*PhysicalDataset, error) {
 	if result.Type != "PHYSICAL_DATASET" {
 		return nil, errors.New("Dataset is not a PHYSICAL_DATASET")
 	}
+	result.EnrichFields()
 	return result, nil
 }
 
@@ -105,15 +108,20 @@ func (c *Client) NewVirtualDataset(spec *NewVirtualDatasetSpec) (*VirtualDataset
 		Dataset: Dataset{
 			CatalogEntity: CatalogEntity{
 				EntityType: "dataset",
+				Path:       spec.Path,
 			},
-			Path: spec.Path,
 			Type: "VIRTUAL_DATASET",
 		},
 		Sql:        spec.Sql,
 		SqlContext: spec.SqlContext,
 	}
 	result := new(VirtualDataset)
-	return result, c.newCatalogItem(dataset, result)
+	err := c.newCatalogItem(dataset, result)
+	if err != nil {
+		return nil, err
+	}
+	result.EnrichFields()
+	return result, nil
 }
 
 type UpdateVirtualDatasetSpec struct {
@@ -132,7 +140,12 @@ func (c *Client) UpdateVirtualDataset(id string, spec *UpdateVirtualDatasetSpec)
 		SqlContext: spec.SqlContext,
 	}
 	result := new(VirtualDataset)
-	return result, c.updateCatalogItem(id, dataset, result)
+	err = c.updateCatalogItem(id, dataset, result)
+	if err != nil {
+		return nil, err
+	}
+	result.EnrichFields()
+	return result, nil
 }
 
 type NewPhysicalDatasetSpec struct {
@@ -145,8 +158,8 @@ func (c *Client) NewPhysicalDataset(fileId string, spec *NewPhysicalDatasetSpec)
 		Dataset: Dataset{
 			CatalogEntity: CatalogEntity{
 				EntityType: "dataset",
+				Path:       spec.Path,
 			},
-			Path: spec.Path,
 			Type: "PHYSICAL_DATASET",
 		},
 		Format: spec.Format,
@@ -156,11 +169,12 @@ func (c *Client) NewPhysicalDataset(fileId string, spec *NewPhysicalDatasetSpec)
 		return nil, err
 	}
 	result := new(PhysicalDataset)
-	path := fmt.Sprintf("/api/v3/catalog/%s", fileId)
-	err = c.request("POST", path, nil, bytes.NewBuffer(body), result)
+	path := fmt.Sprintf("/api/v3/catalog/%s", url.QueryEscape(fileId))
+	err = c.request("POST", path, bytes.NewBuffer(body), result)
 	if err != nil {
 		return nil, err
 	}
+	result.EnrichFields()
 	return result, nil
 }
 
@@ -178,5 +192,10 @@ func (c *Client) UpdatePhysicalDataset(id string, spec *UpdatePhysicalDatasetSpe
 		Format:  spec.Format,
 	}
 	result := new(PhysicalDataset)
-	return result, c.updateCatalogItem(id, dataset, result)
+	err = c.updateCatalogItem(id, dataset, result)
+	if err != nil {
+		return nil, err
+	}
+	result.EnrichFields()
+	return result, nil
 }

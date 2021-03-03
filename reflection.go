@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 )
 
 type Reflection struct {
@@ -61,8 +62,8 @@ type ReflectionMeasureField struct {
 }
 
 func (c *Client) getReflection(id string, result interface{}) error {
-	path := fmt.Sprintf("/api/v3/reflection/%s", id)
-	err := c.request("GET", path, nil, nil, result)
+	path := fmt.Sprintf("/api/v3/reflection/%s", url.QueryEscape(id))
+	err := c.request("GET", path, nil, result)
 	if err != nil {
 		return err
 	}
@@ -74,7 +75,7 @@ func (c *Client) newReflection(payload interface{}, result interface{}) error {
 	if err != nil {
 		return err
 	}
-	return c.request("POST", "/api/v3/reflection", nil, bytes.NewBuffer(body), result)
+	return c.request("POST", "/api/v3/reflection", bytes.NewBuffer(body), result)
 }
 
 func (c *Client) updateReflection(id string, payload interface{}, result interface{}) error {
@@ -82,13 +83,13 @@ func (c *Client) updateReflection(id string, payload interface{}, result interfa
 	if err != nil {
 		return err
 	}
-	path := fmt.Sprintf("/api/v3/reflection/%s", id)
-	return c.request("PUT", path, nil, bytes.NewBuffer(body), result)
+	path := fmt.Sprintf("/api/v3/reflection/%s", url.QueryEscape(id))
+	return c.request("PUT", path, bytes.NewBuffer(body), result)
 }
 
 func (c *Client) DeleteReflection(id string) error {
-	path := fmt.Sprintf("/api/v3/reflection/%s", id)
-	return c.request("DELETE", path, nil, nil, nil)
+	path := fmt.Sprintf("/api/v3/reflection/%s", url.QueryEscape(id))
+	return c.request("DELETE", path, nil, nil)
 }
 
 func (c *Client) GetRawReflection(id string) (*RawReflection, error) {

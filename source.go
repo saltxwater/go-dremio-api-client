@@ -22,6 +22,7 @@ func (c *Client) GetSource(id string) (*Source, error) {
 	if response.EntityType != "source" {
 		return nil, errors.New("Catalog entity is not a source")
 	}
+	response.EnrichFields()
 	return response, nil
 }
 
@@ -43,7 +44,12 @@ func (c *Client) NewSource(spec *NewSourceSpec) (*Source, error) {
 		Config:      spec.Config,
 	}
 	result := new(Source)
-	return result, c.newCatalogItem(source, result)
+	err := c.newCatalogItem(source, result)
+	if err != nil {
+		return nil, err
+	}
+	result.EnrichFields()
+	return result, nil
 }
 
 type UpdateSourceSpec struct {
@@ -64,5 +70,10 @@ func (c *Client) UpdateSource(id string, spec *UpdateSourceSpec) (*Source, error
 		Config:        spec.Config,
 	}
 	result := new(Source)
-	return result, c.updateCatalogItem(id, source, result)
+	err = c.updateCatalogItem(id, source, result)
+	if err != nil {
+		return nil, err
+	}
+	result.EnrichFields()
+	return result, err
 }

@@ -48,7 +48,7 @@ func NewClient(baseUrl string, cfg Config) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) request(method, requestPath string, query url.Values, body io.Reader, responseStruct interface{}) error {
+func (c *Client) request(method, requestPath string, body io.Reader, responseStruct interface{}) error {
 	if c.config.ApiKey == "" {
 		apikey, err := c.getApiKey(c.config.Username, c.config.Password)
 		if err != nil {
@@ -57,7 +57,7 @@ func (c *Client) request(method, requestPath string, query url.Values, body io.R
 		c.config.ApiKey = apikey
 	}
 
-	r, err := c.newRequest(method, requestPath, query, body)
+	r, err := c.newRequest(method, requestPath, body)
 	if err != nil {
 		return err
 	}
@@ -93,11 +93,10 @@ func (c *Client) request(method, requestPath string, query url.Values, body io.R
 	return nil
 }
 
-func (c *Client) newRequest(method, requestPath string, query url.Values, body io.Reader) (*http.Request, error) {
-	url := c.baseUrl
-	url.Path = path.Join(url.Path, requestPath)
-	url.RawQuery = query.Encode()
-	req, err := http.NewRequest(method, url.String(), body)
+func (c *Client) newRequest(method, requestPath string, body io.Reader) (*http.Request, error) {
+	log.Printf("BaseUrl %s", c.baseUrl.String())
+	url := c.baseUrl.String() + requestPath
+	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return req, err
 	}
@@ -108,13 +107,15 @@ func (c *Client) newRequest(method, requestPath string, query url.Values, body i
 
 	if os.Getenv("DREMIO_LOG") != "" {
 		if body == nil {
-			log.Printf("request (%s) to %s with no body data", method, url.String())
+			log.Printf("request (%s) to %s with no body data", method, url)
 		} else {
-			log.Printf("request (%s) to %s with body data: %s", method, url.String(), body.(*bytes.Buffer).String())
+			log.Printf("request (%s) to %s with body data: %s", method, url, body.(*bytes.Buffer))
 		}
 	}
 
 	req.Header.Add("Content-Type", "application/json")
+
+	log.Printf("Created %s request for %s.", req.Method, url)
 	return req, err
 }
 

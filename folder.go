@@ -6,7 +6,6 @@ import (
 
 type Folder struct {
 	CatalogEntity
-	Path     []string               `json:"path,omitempty"`
 	Children []CatalogEntitySummary `json:"children,omitempty"`
 }
 
@@ -19,6 +18,7 @@ func (c *Client) GetFolder(id string) (*Folder, error) {
 	if response.EntityType != "folder" {
 		return nil, errors.New("Catalog entity is not a folder")
 	}
+	response.EnrichFields()
 	return response, nil
 }
 
@@ -30,9 +30,14 @@ func (c *Client) NewFolder(spec *NewFolderSpec) (*Folder, error) {
 	folder := Folder{
 		CatalogEntity: CatalogEntity{
 			EntityType: "folder",
+			Path:       spec.Path,
 		},
-		Path: spec.Path,
 	}
 	result := new(Folder)
-	return result, c.newCatalogItem(folder, result)
+	err := c.newCatalogItem(folder, result)
+	if err != nil {
+		return nil, err
+	}
+	result.EnrichFields()
+	return result, err
 }

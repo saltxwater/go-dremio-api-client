@@ -20,6 +20,7 @@ func (c *Client) GetSpace(id string) (*Space, error) {
 	if response.EntityType != "space" {
 		return nil, errors.New("Catalog entity is not a space")
 	}
+	response.EnrichFields()
 	return response, nil
 }
 
@@ -35,5 +36,10 @@ func (c *Client) NewSpace(spec *NewSpaceSpec) (*Space, error) {
 		Name: spec.Name,
 	}
 	result := new(Space)
-	return result, c.newCatalogItem(space, result)
+	err := c.newCatalogItem(space, result)
+	if err != nil {
+		return nil, err
+	}
+	result.EnrichFields()
+	return result, nil
 }
