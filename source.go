@@ -6,7 +6,6 @@ import (
 
 type Source struct {
 	CatalogEntity
-	Name        string      `json:"name,omitempty"`
 	Description string      `json:"description,omitempty"`
 	Type        string      `json:"type,omitempty"`
 	Config      interface{} `json:"config,omitempty"`
@@ -37,8 +36,8 @@ func (c *Client) NewSource(spec *NewSourceSpec) (*Source, error) {
 	source := Source{
 		CatalogEntity: CatalogEntity{
 			EntityType: "source",
+			Name:       spec.Name,
 		},
-		Name:        spec.Name,
 		Description: spec.Description,
 		Type:        spec.Type,
 		Config:      spec.Config,
@@ -64,7 +63,6 @@ func (c *Client) UpdateSource(id string, spec *UpdateSourceSpec) (*Source, error
 	}
 	source := Source{
 		CatalogEntity: original.CatalogEntity,
-		Name:          original.Name,
 		Type:          original.Type,
 		Description:   spec.Description,
 		Config:        spec.Config,

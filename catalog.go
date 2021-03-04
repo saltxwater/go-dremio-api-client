@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
 )
@@ -108,6 +109,7 @@ func (c *Client) DeleteCatalogItem(id string) error {
 }
 
 func (ce *CatalogEntity) EnrichFields() {
+	log.Printf("Enrich Entity: %#v", ce)
 	if ce.Name == "" && len(ce.Path) > 0 {
 		ce.Name = ce.Path[len(ce.Path)-1]
 	}
@@ -118,13 +120,16 @@ func (ce *CatalogEntity) EnrichFields() {
 	for _, b := range ce.Children {
 		b.EnrichFields()
 	}
+	log.Printf("Enriched Entity: %#v", ce)
 }
 
 func (ce *CatalogChild) EnrichFields() {
+	log.Printf("Enrich Child: %#v", ce)
 	if ce.Name == "" && len(ce.Path) > 0 {
 		ce.Name = ce.Path[len(ce.Path)-1]
 	}
 	if len(ce.Path) == 0 && ce.Name != "" {
 		ce.Path = []string{ce.Name}
 	}
+	log.Printf("Enriched Child: %#v", ce)
 }
