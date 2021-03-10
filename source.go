@@ -4,12 +4,25 @@ import (
 	"errors"
 )
 
+type SourceMetadataPolicy struct {
+	AuthTTLMs             int    `json:"authTTLMs,omitempty"`
+	DatasetRefreshAfterMs int    `json:"datasetRefreshAfterMs,omitempty"`
+	DatasetExpireAfterMs  int    `json:"datasetExpireAfterMs,omitempty"`
+	NamesRefreshMs        int    `json:"namesRefreshMs,omitempty"`
+	DatasetUpdateMode     string `json:"datasetUpdateMode,omitempty"`
+}
+
 type Source struct {
 	CatalogEntity
-	Description string      `json:"description,omitempty"`
-	Type        string      `json:"type,omitempty"`
-	Config      interface{} `json:"config,omitempty"`
-	CreatedAt   string      `json:"createdAt,omitempty"`
+	Description                 string                `json:"description,omitempty"`
+	Type                        string                `json:"type,omitempty"`
+	Config                      interface{}           `json:"config,omitempty"`
+	CreatedAt                   string                `json:"createdAt,omitempty"`
+	MetadataPolicy              *SourceMetadataPolicy `json:"metadataPolicy,omitempty"`
+	AccelerationRefreshPeriodMs int                   `json:"accelerationRefreshPeriodMs,omitempty"`
+	AccelerationGracePeriodMs   int                   `json:"accelerationGracePeriodMs,omitempty"`
+	AccelerationNeverExpire     bool                  `json:"accelerationNeverExpire,omitempty"`
+	AccelerationNeverRefresh    bool                  `json:"accelerationNeverRefresh,omitempty"`
 }
 
 func (c *Client) GetSource(id string) (*Source, error) {
@@ -26,10 +39,15 @@ func (c *Client) GetSource(id string) (*Source, error) {
 }
 
 type NewSourceSpec struct {
-	Name        string
-	Description string
-	Type        string
-	Config      interface{}
+	Name                        string
+	Description                 string
+	Type                        string
+	Config                      interface{}
+	MetadataPolicy              *SourceMetadataPolicy
+	AccelerationRefreshPeriodMs int
+	AccelerationGracePeriodMs   int
+	AccelerationNeverExpire     bool
+	AccelerationNeverRefresh    bool
 }
 
 func (c *Client) NewSource(spec *NewSourceSpec) (*Source, error) {
@@ -38,9 +56,14 @@ func (c *Client) NewSource(spec *NewSourceSpec) (*Source, error) {
 			EntityType: "source",
 			Name:       spec.Name,
 		},
-		Description: spec.Description,
-		Type:        spec.Type,
-		Config:      spec.Config,
+		Description:                 spec.Description,
+		Type:                        spec.Type,
+		Config:                      spec.Config,
+		MetadataPolicy:              spec.MetadataPolicy,
+		AccelerationRefreshPeriodMs: spec.AccelerationRefreshPeriodMs,
+		AccelerationGracePeriodMs:   spec.AccelerationGracePeriodMs,
+		AccelerationNeverExpire:     spec.AccelerationNeverExpire,
+		AccelerationNeverRefresh:    spec.AccelerationNeverRefresh,
 	}
 	result := new(Source)
 	err := c.newCatalogItem(source, result)
@@ -52,8 +75,13 @@ func (c *Client) NewSource(spec *NewSourceSpec) (*Source, error) {
 }
 
 type UpdateSourceSpec struct {
-	Description string
-	Config      interface{}
+	Description                 string
+	Config                      interface{}
+	MetadataPolicy              *SourceMetadataPolicy
+	AccelerationRefreshPeriodMs int
+	AccelerationGracePeriodMs   int
+	AccelerationNeverExpire     bool
+	AccelerationNeverRefresh    bool
 }
 
 func (c *Client) UpdateSource(id string, spec *UpdateSourceSpec) (*Source, error) {
@@ -62,10 +90,15 @@ func (c *Client) UpdateSource(id string, spec *UpdateSourceSpec) (*Source, error
 		return nil, err
 	}
 	source := Source{
-		CatalogEntity: original.CatalogEntity,
-		Type:          original.Type,
-		Description:   spec.Description,
-		Config:        spec.Config,
+		CatalogEntity:               original.CatalogEntity,
+		Type:                        original.Type,
+		Description:                 spec.Description,
+		Config:                      spec.Config,
+		MetadataPolicy:              spec.MetadataPolicy,
+		AccelerationRefreshPeriodMs: spec.AccelerationRefreshPeriodMs,
+		AccelerationGracePeriodMs:   spec.AccelerationGracePeriodMs,
+		AccelerationNeverExpire:     spec.AccelerationNeverExpire,
+		AccelerationNeverRefresh:    spec.AccelerationNeverRefresh,
 	}
 	result := new(Source)
 	err = c.updateCatalogItem(id, source, result)

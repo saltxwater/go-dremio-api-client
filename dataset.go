@@ -34,7 +34,8 @@ type VirtualDataset struct {
 
 type PhysicalDataset struct {
 	Dataset
-	Format PhysicalDatasetFormat `json:"format,omitempty"`
+	Format                    PhysicalDatasetFormat             `json:"format,omitempty"`
+	AccelerationRefreshPolicy *DatasetAccelerationRefreshPolicy `json:"accelerationRefreshPolicy,omitempty"`
 }
 
 type PhysicalDatasetFormat struct {
@@ -50,6 +51,13 @@ type PhysicalDatasetFormat struct {
 	AutoGenerateColumnNames bool   `json:"autoGenerateColumnNames,omitempty"`
 	SheetName               string `json:"sheetName,omitempty"`
 	HasMergedCells          bool   `json:"hasMergedCells,omitempty"`
+}
+
+type DatasetAccelerationRefreshPolicy struct {
+	RefreshPeriodMs int    `json:"refreshPeriodMs,omitempty"`
+	GracePeriodMs   int    `json:"gracePeriodMs,omitempty"`
+	Method          string `json:"method,omitempty"`
+	RefreshField    string `json:"refreshField,omitempty"`
 }
 
 func (c *Client) GetDataset(id string) (*Dataset, error) {
@@ -149,8 +157,9 @@ func (c *Client) UpdateVirtualDataset(id string, spec *UpdateVirtualDatasetSpec)
 }
 
 type NewPhysicalDatasetSpec struct {
-	Path   []string
-	Format PhysicalDatasetFormat
+	Path                      []string
+	Format                    PhysicalDatasetFormat
+	AccelerationRefreshPolicy *DatasetAccelerationRefreshPolicy
 }
 
 func (c *Client) NewPhysicalDataset(fileId string, spec *NewPhysicalDatasetSpec) (*PhysicalDataset, error) {
@@ -162,7 +171,8 @@ func (c *Client) NewPhysicalDataset(fileId string, spec *NewPhysicalDatasetSpec)
 			},
 			Type: "PHYSICAL_DATASET",
 		},
-		Format: spec.Format,
+		Format:                    spec.Format,
+		AccelerationRefreshPolicy: spec.AccelerationRefreshPolicy,
 	}
 	body, err := json.Marshal(dataset)
 	if err != nil {
@@ -179,7 +189,8 @@ func (c *Client) NewPhysicalDataset(fileId string, spec *NewPhysicalDatasetSpec)
 }
 
 type UpdatePhysicalDatasetSpec struct {
-	Format PhysicalDatasetFormat
+	Format                    PhysicalDatasetFormat
+	AccelerationRefreshPolicy *DatasetAccelerationRefreshPolicy
 }
 
 func (c *Client) UpdatePhysicalDataset(id string, spec *UpdatePhysicalDatasetSpec) (*PhysicalDataset, error) {
@@ -188,8 +199,9 @@ func (c *Client) UpdatePhysicalDataset(id string, spec *UpdatePhysicalDatasetSpe
 		return nil, err
 	}
 	dataset := PhysicalDataset{
-		Dataset: original.Dataset,
-		Format:  spec.Format,
+		Dataset:                   original.Dataset,
+		Format:                    spec.Format,
+		AccelerationRefreshPolicy: spec.AccelerationRefreshPolicy,
 	}
 	result := new(PhysicalDataset)
 	err = c.updateCatalogItem(id, dataset, result)
