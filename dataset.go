@@ -34,7 +34,7 @@ type VirtualDataset struct {
 
 type PhysicalDataset struct {
 	Dataset
-	Format                    PhysicalDatasetFormat             `json:"format,omitempty"`
+	Format                    *PhysicalDatasetFormat            `json:"format,omitempty"`
 	AccelerationRefreshPolicy *DatasetAccelerationRefreshPolicy `json:"accelerationRefreshPolicy,omitempty"`
 }
 
@@ -158,7 +158,7 @@ func (c *Client) UpdateVirtualDataset(id string, spec *UpdateVirtualDatasetSpec)
 
 type NewPhysicalDatasetSpec struct {
 	Path                      []string
-	Format                    PhysicalDatasetFormat
+	Format                    *PhysicalDatasetFormat
 	AccelerationRefreshPolicy *DatasetAccelerationRefreshPolicy
 }
 
@@ -189,7 +189,7 @@ func (c *Client) NewPhysicalDataset(fileId string, spec *NewPhysicalDatasetSpec)
 }
 
 type UpdatePhysicalDatasetSpec struct {
-	Format                    PhysicalDatasetFormat
+	Format                    *PhysicalDatasetFormat
 	AccelerationRefreshPolicy *DatasetAccelerationRefreshPolicy
 }
 
