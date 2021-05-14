@@ -41,6 +41,61 @@ type GetCatalogResponse struct {
 	Data []CatalogEntitySummary `json:"data"`
 }
 
+type TagsBody struct {
+	Tags    []string `json:"tags"`
+	Version string   `json:"version"`
+}
+
+type WikiBody struct {
+	Text    string `json:"text"`
+	Version int    `json:"version"`
+}
+
+func (c *Client) GetEntityTags(id string) (TagsBody, error) {
+	response := new(TagsBody)
+	url := fmt.Sprintf("/api/v3/catalog/%s/collaboration/tag", id)
+	err := c.request("GET", url, nil, response)
+	if err != nil {
+		return TagsBody{}, err
+	}
+	return *response, err
+}
+
+func (c *Client) SetEntityTags(id string, tags []string, version string) error {
+	rawBody := TagsBody{
+		Tags:    tags,
+		Version: version,
+	}
+	body, err := json.Marshal(rawBody)
+	if err != nil {
+		return err
+	}
+	url := fmt.Sprintf("/api/v3/catalog/%s/collaboration/tag", id)
+	return c.request("POST", url, bytes.NewBuffer(body), nil)
+}
+
+func (c *Client) GetEntityWiki(id string) (WikiBody, error) {
+	response := new(WikiBody)
+	url := fmt.Sprintf("/api/v3/catalog/%s/collaboration/wiki", id)
+	err := c.request("GET", url, nil, response)
+	if err != nil {
+		return WikiBody{}, err
+	}
+	return *response, err
+}
+func (c *Client) SetEntityWiki(id string, text string, version int) error {
+	rawBody := WikiBody{
+		Text:    text,
+		Version: version,
+	}
+	body, err := json.Marshal(rawBody)
+	if err != nil {
+		return err
+	}
+	url := fmt.Sprintf("/api/v3/catalog/%s/collaboration/wiki", id)
+	return c.request("POST", url, bytes.NewBuffer(body), nil)
+}
+
 func (c *Client) GetRootCatalogSummary() ([]CatalogEntitySummary, error) {
 	response := new(GetCatalogResponse)
 

@@ -6,7 +6,6 @@ import (
 
 type Space struct {
 	CatalogEntity
-	Name      string                 `json:"name,omitempty"`
 	CreatedAt string                 `json:"createdAt,omitempty"`
 	Children  []CatalogEntitySummary `json:"children,omitempty"`
 }
@@ -32,8 +31,8 @@ func (c *Client) NewSpace(spec *NewSpaceSpec) (*Space, error) {
 	space := Space{
 		CatalogEntity: CatalogEntity{
 			EntityType: "space",
+			Name:       spec.Name,
 		},
-		Name: spec.Name,
 	}
 	result := new(Space)
 	err := c.newCatalogItem(space, result)
