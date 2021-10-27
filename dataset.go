@@ -58,6 +58,8 @@ type DatasetAccelerationRefreshPolicy struct {
 	GracePeriodMs   int    `json:"gracePeriodMs,omitempty"`
 	Method          string `json:"method,omitempty"`
 	RefreshField    string `json:"refreshField,omitempty"`
+	NeverExpire     bool   `json:"neverExpire,omitempty"`
+	NeverRefresh    bool   `json:"neverRefresh,omitempty"`
 }
 
 func (c *Client) GetDataset(id string) (*Dataset, error) {
